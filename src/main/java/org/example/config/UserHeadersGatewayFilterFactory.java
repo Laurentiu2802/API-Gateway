@@ -12,9 +12,9 @@ import java.util.Map;
 
 @Slf4j
 @Component
-public class UserHeadersFilter extends AbstractGatewayFilterFactory<UserHeadersFilter.Config> {
+public class UserHeadersGatewayFilterFactory extends AbstractGatewayFilterFactory<UserHeadersGatewayFilterFactory.Config> {
 
-    public UserHeadersFilter() {
+    public UserHeadersGatewayFilterFactory() {
         super(Config.class);
     }
 

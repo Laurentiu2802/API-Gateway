@@ -7,17 +7,22 @@ spring:
 
   cloud:
     gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOrigins: "http://localhost:5173"
+            allowedOrigins:
+              - "http://localhost:5173"
             allowedMethods:
               - GET
               - POST
               - PUT
               - DELETE
               - OPTIONS
-            allowedHeaders: "*"
+            allowedHeaders:
+              - "*"
             allowCredentials: true
             maxAge: 3600
 
@@ -34,8 +39,8 @@ spring:
           predicates:
             - Path=/api/users/**
           filters:
-            - StripPrefix=2
-            - AddUserHeadersFilter
+            - StripPrefix=1
+            - UserHeaders
 
 
   security:
