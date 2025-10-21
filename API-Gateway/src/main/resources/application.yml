@@ -1,0 +1,58 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:5173"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+
+      routes:
+        - id: post-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/posts/**
+          filters:
+            - StripPrefix=2
+
+        - id: user-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=2
+
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/AutoAlly
+          jwk-set-uri: http://localhost:8080/realms/AutoAlly/protocol/openid-connect/certs
+
+# JWT converter configuration (from your auth service)
+jwt:
+  auth:
+    converter:
+      resource-id: autoally-rest-api
+      principle-attribute: preferred_username
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.security: DEBUG
