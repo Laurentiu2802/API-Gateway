@@ -32,7 +32,8 @@ spring:
           predicates:
             - Path=/api/posts/**
           filters:
-            - StripPrefix=2
+            - StripPrefix=1
+            - UserHeaders
 
         - id: user-service
           uri: http://localhost:8083
