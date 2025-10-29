@@ -51,6 +51,25 @@ spring:
           issuer-uri: http://localhost:8080/realms/AutoAlly
           jwk-set-uri: http://localhost:8080/realms/AutoAlly/protocol/openid-connect/certs
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    prometheus:
+      enabled: true
+    metrics:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+
 # JWT converter configuration (from your auth service)
 jwt:
   auth:
@@ -63,3 +82,5 @@ logging:
     org.springframework.cloud.gateway: DEBUG
     org.springframework.security: DEBUG
     org.example: DEBUG
+
+

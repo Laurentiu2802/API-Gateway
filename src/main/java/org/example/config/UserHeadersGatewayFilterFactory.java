@@ -20,41 +20,51 @@ public class UserHeadersGatewayFilterFactory extends AbstractGatewayFilterFactor
 
     @Override
     public GatewayFilter apply(Config config) {
-        return (exchange, chain) -> ReactiveSecurityContextHolder.getContext()
-                .map(securityContext -> securityContext.getAuthentication())
-                .filter(authentication -> authentication instanceof JwtAuthenticationToken)
-                .map(authentication -> (JwtAuthenticationToken) authentication)
-                .map(jwtAuth -> {
-                    Jwt jwt = jwtAuth.getToken();
+        return (exchange, chain) -> {
+            // BYPASS FOR LOAD TESTING: If X-User-Id header is already present, skip JWT validation
+            if (exchange.getRequest().getHeaders().containsKey("X-User-Id")) {
+                log.info("Bypassing JWT validation - X-User-Id header present for testing: {}",
+                        exchange.getRequest().getHeaders().getFirst("X-User-Id"));
+                return chain.filter(exchange);
+            }
 
-                    log.info("Extracting user info from JWT");
+            // Normal JWT processing
+            return ReactiveSecurityContextHolder.getContext()
+                    .map(securityContext -> securityContext.getAuthentication())
+                    .filter(authentication -> authentication instanceof JwtAuthenticationToken)
+                    .map(authentication -> (JwtAuthenticationToken) authentication)
+                    .map(jwtAuth -> {
+                        Jwt jwt = jwtAuth.getToken();
 
-                    // Extract user info from JWT
-                    String userId = jwt.getSubject();
-                    String email = jwt.getClaim("email");
-                    String firstName = jwt.getClaim("given_name");
-                    String lastName = jwt.getClaim("family_name");
-                    String preferredUsername = jwt.getClaim("preferred_username");
+                        log.info("Extracting user info from JWT");
 
-                    // Extract roles
-                    String roles = extractRoles(jwt);
+                        // Extract user info from JWT
+                        String userId = jwt.getSubject();
+                        String email = jwt.getClaim("email");
+                        String firstName = jwt.getClaim("given_name");
+                        String lastName = jwt.getClaim("family_name");
+                        String preferredUsername = jwt.getClaim("preferred_username");
 
-                    log.info("User ID: {}, Email: {}, Roles: {}", userId, email, roles);
+                        // Extract roles
+                        String roles = extractRoles(jwt);
 
-                    // Add headers to downstream request
-                    return exchange.mutate()
-                            .request(request -> request
-                                    .header("X-User-Id", userId != null ? userId : "")
-                                    .header("X-User-Email", email != null ? email : "")
-                                    .header("X-User-FirstName", firstName != null ? firstName : "")
-                                    .header("X-User-LastName", lastName != null ? lastName : "")
-                                    .header("X-User-Username", preferredUsername != null ? preferredUsername : "")
-                                    .header("X-User-Roles", roles)
-                            )
-                            .build();
-                })
-                .defaultIfEmpty(exchange)
-                .flatMap(chain::filter);
+                        log.info("User ID: {}, Email: {}, Roles: {}", userId, email, roles);
+
+                        // Add headers to downstream request
+                        return exchange.mutate()
+                                .request(request -> request
+                                        .header("X-User-Id", userId != null ? userId : "")
+                                        .header("X-User-Email", email != null ? email : "")
+                                        .header("X-User-FirstName", firstName != null ? firstName : "")
+                                        .header("X-User-LastName", lastName != null ? lastName : "")
+                                        .header("X-User-Username", preferredUsername != null ? preferredUsername : "")
+                                        .header("X-User-Roles", roles)
+                                )
+                                .build();
+                    })
+                    .defaultIfEmpty(exchange)
+                    .flatMap(chain::filter);
+        };
     }
 
     private String extractRoles(Jwt jwt) {
