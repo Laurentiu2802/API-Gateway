@@ -1,5 +1,7 @@
 server:
   port: 8081
+  netty:
+    connection-timeout: 20000
 
 spring:
   application:
@@ -43,6 +45,14 @@ spring:
             - StripPrefix=1
             - UserHeaders
 
+      httpclient:
+        pool:
+          type: ELASTIC
+          max-connections: 1000
+          max-pending-acquires: 1000
+          acquire-timeout: 45000
+        connect-timeout: 10000
+        response-timeout: 30s
 
   security:
     oauth2:
@@ -69,7 +79,6 @@ management:
       export:
         enabled: true
 
-
 # JWT converter configuration (from your auth service)
 jwt:
   auth:
@@ -82,5 +91,4 @@ logging:
     org.springframework.cloud.gateway: DEBUG
     org.springframework.security: DEBUG
     org.example: DEBUG
-
-
+    reactor.netty: INFO
