@@ -8,7 +8,10 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @Component
@@ -69,13 +72,26 @@ public class UserHeadersGatewayFilterFactory extends AbstractGatewayFilterFactor
 
     private String extractRoles(Jwt jwt) {
         try {
+            Set<String> roles = new HashSet<>();
+
+            // Extract REALM roles (CAR_ENTHUSIAST, MECHANIC)
+            Map<String, Object> realmAccess = jwt.getClaim("realm_access");
+            if (realmAccess != null && realmAccess.containsKey("roles")) {
+                Collection<String> realmRoles = (Collection<String>) realmAccess.get("roles");
+                roles.addAll(realmRoles);
+            }
+
+            // Also keep resource roles if needed
             Map<String, Object> resourceAccess = jwt.getClaim("resource_access");
             if (resourceAccess != null && resourceAccess.containsKey("autoally-rest-api")) {
                 Map<String, Object> resource = (Map<String, Object>) resourceAccess.get("autoally-rest-api");
                 if (resource != null && resource.containsKey("roles")) {
-                    return String.join(",", (Iterable<String>) resource.get("roles"));
+                    Collection<String> resourceRoles = (Collection<String>) resource.get("roles");
+                    roles.addAll(resourceRoles);
                 }
             }
+
+            return String.join(",", roles);
         } catch (Exception e) {
             log.error("Error extracting roles from JWT", e);
         }

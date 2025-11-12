@@ -51,18 +51,27 @@ public class JWTAuthConv implements Converter<Jwt, Mono<AbstractAuthenticationTo
     }
 
     private Collection<? extends GrantedAuthority> extractResourceRoles(Jwt jwt) {
-        Map<String, Object> resourceAccess = jwt.getClaim("resource_access");
-        Map<String, Object> resource;
-        Collection<String> resourceRoles;
+        Set<GrantedAuthority> authorities = new HashSet<>();
 
-        if (resourceAccess == null
-                || (resource = (Map<String, Object>) resourceAccess.get(resourceId)) == null
-                || (resourceRoles = (Collection<String>) resource.get("roles")) == null) {
-            return Set.of();
+        Map<String, Object> realmAccess = jwt.getClaim("realm_access");
+        if (realmAccess != null && realmAccess.containsKey("roles")) {
+            Collection<String> realmRoles = (Collection<String>) realmAccess.get("roles");
+            realmRoles.stream()
+                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                    .forEach(authorities::add);
         }
 
-        return resourceRoles.stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                .collect(Collectors.toSet());
+        Map<String, Object> resourceAccess = jwt.getClaim("resource_access");
+        if (resourceAccess != null) {
+            Map<String, Object> resource = (Map<String, Object>) resourceAccess.get(resourceId);
+            if (resource != null && resource.containsKey("roles")) {
+                Collection<String> resourceRoles = (Collection<String>) resource.get("roles");
+                resourceRoles.stream()
+                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                        .forEach(authorities::add);
+            }
+        }
+
+        return authorities;
     }
 }

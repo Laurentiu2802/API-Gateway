@@ -21,6 +21,7 @@ spring:
               - GET
               - POST
               - PUT
+              - PATCH
               - DELETE
               - OPTIONS
             allowedHeaders:
@@ -41,6 +42,14 @@ spring:
           uri: http://localhost:8083
           predicates:
             - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - UserHeaders
+
+        - id: appointment_service
+          uri: http://localhost:8084
+          predicates:
+            - Path=/api/appointments/**
           filters:
             - StripPrefix=1
             - UserHeaders
