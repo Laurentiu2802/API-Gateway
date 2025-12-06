@@ -1,4 +1,4 @@
-name: Build, Test, SonarCloud Analysis and Docker Publish
+name: Build, Test and Docker Publish
 
 on:
   push:
@@ -37,18 +37,10 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: ${{ runner.os }}-gradle-
 
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
-      - name: Build, Test and Analyze
+      - name: Build and Test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew clean build jacocoTestReport sonar --info
+        run: ./gradlew clean build --info
 
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/gradle@master
