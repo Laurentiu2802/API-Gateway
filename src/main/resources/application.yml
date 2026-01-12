@@ -1,5 +1,11 @@
 server:
-  port: 8081
+  port: 8443  # Changed to HTTPS port
+  ssl:
+    enabled: true
+    key-store: classpath:autoally-keystore.p12
+    key-store-password: autoally123
+    key-store-type: PKCS12
+    key-alias: autoally
   netty:
     connection-timeout: 20000
 
@@ -17,6 +23,7 @@ spring:
           '[/**]':
             allowedOrigins:
               - "http://localhost:5173"
+              - "https://localhost:5173"  # Added HTTPS frontend
             allowedMethods:
               - GET
               - POST
@@ -88,7 +95,7 @@ management:
       export:
         enabled: true
 
-# JWT converter configuration (from your auth service)
+# JWT converter configuration
 jwt:
   auth:
     converter:
