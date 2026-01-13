@@ -31,6 +31,7 @@ public class SecurityConfiguration {
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(HttpMethod.OPTIONS).permitAll()
                         .pathMatchers("/actuator/health", "/actuator/info").permitAll()
+                        .pathMatchers("/actuator/prometheus").permitAll()
                         .pathMatchers("/actuator/**").authenticated() // Restricted now
                         .anyExchange().authenticated()
                 )
